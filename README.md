@@ -45,3 +45,17 @@ if last DC in domain, use the -lastdomaincontrollerindomain flag
 
 things for office. If this is a thing, delete office....
 https://www.darkoperator.com/blog/2017/11/11/windows-defender-exploit-guard-asr-rules-for-office
+
+
+
+adsi edit change who can see password to something
+
+enable powershell loging for group policy
+Administrative Templates → Windows Components → Windows PowerShell
+https://www.fireeye.com/blog/threat-research/2016/02/greater_visibilityt.html
+
+
+
+
+
+
