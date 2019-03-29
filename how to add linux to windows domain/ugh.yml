@@ -1,0 +1,52 @@
+---
+- name: add ubuntu to windows domain
+  hosts: all
+  become: yes
+  become_method: sudo
+  
+  tasks:
+    - name: install packages
+      apt:
+        name: realmd,sssd,sssd-tools,libnss-sss,libpam-sss,krb5-user,adcli,samba-common-bin,packagekit,python-pexpect 
+        state: present				 
+    
+    - name: adding info to sudoers
+      lineinfile:
+        dest: /etc/sudoers
+        line: '%linux@internal.bravo.red ALL=(ALL:ALL) ALL'
+        insertafter: '^%sudo'
+        validate: /usr/sbin/visudo -cf %s
+
+    - name: copy kerbrose file
+      copy: 
+        src: /home/user/things/krb5.conf 
+        dest: /etc/krb5.conf
+    
+    - name: updating pam
+      lineinfile:
+       dest: /etc/pam.d/common-session
+       line: 'session optional			pam_mkhomedir.so' 
+
+    - name: copy realmd file
+      copy:
+        src: /home/user/things/realmd.conf
+        dest: /etc/realmd.conf
+
+    - name: add linux to ad
+      expect:
+        command: /bin/bash -c "/usr/sbin/realm join --user=administrator internal.bravo.red"
+        responses:
+          Password for *: "password"
+
+    - name : copy sssd file
+      copy:
+        src: /home/user/things/sssd.conf
+        dest: /etc/sssd/sssd.conf
+      notify:
+        - restart sssd
+
+  handlers:
+    - name: restart sssd
+      service:
+        name: sssd
+        state: restarted

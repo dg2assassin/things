@@ -1,0 +1,55 @@
+#new IP and DNS server
+New-NetIPAddress -InterfaceAlias Ethernet0 -IPAddress "10.$($ip).2.12" -PrefixLength 24 -DefaultGateway "10.$($ip).2.254"
+Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses 10.$($ip).2.12, 10.$($ip).1.12
+
+#install domain services
+Install-WindowsFeature -Name ad-domain-services -IncludeManagementTools 
+
+#adding windows to domain
+$user = "internal\administrator"
+$pass = convertto-securestring -string password -asplaintext -force
+$credential = New-Object System.Management.Automation.PSCredential($user,$pass)
+add-computer -domainname internal.$($domain).red -credential $credential -force
+
+#adding another DC to domain
+$user = "internal\administrator"
+$pass = convertto-securestring -string password -asplaintext -force
+$credential = New-Object System.Management.Automation.PSCredential($user,$pass)
+Install-ADDSDomainController -InstallDns -Credential $credential -DomainName dev.internal.alpha.red -SafeModeAdministratorPassword $pass -confirm:$false
+
+#new child domain
+$user = "internal\administrator"
+$pass = convertto-securestring -string password -asplaintext -force
+$credential = New-Object System.Management.Automation.PSCredential($user,$pass)
+install-addsdomain -domaintype childdomain -parentdomainname internal.$($domain).red -newdomainname dev -credential $credential -safemodeadministratorpassword $pass -force:$true 
+
+#dns server things
+#create reverse dns entry
+add-dnsserverprimaryzone -networkid 10.$($ip).2.0/24 -zonefile "2.1.10.in-addr.arpa" -computername dev-dc
+
+#new dns entry
+Add-DnsServerResourceRecordA -Name "trial-dc" -ZoneName "dev.internal.$($domain).red" -AllowUpdateAny -IPv4Address "10.$($ip).2.13" -TimeToLive 00:10:00 -CreatePtr -computername dev-dc
+
+
+#DHCP things
+Install-WindowsFeature DHCP -IncludeManagementTools
+netsh dhcp add securitygroups
+Restart-service dhcpserver
+
+Add-DhcpServerInDC -DnsName production-dc.internal.$($domain).red -IPAddress 10.$($ip).1.12
+Set-DhcpServerv4DnsSetting -ComputerName production-dc.internal.$($domain).red -DynamicUpdates Always -DeleteDnsRRonLeaseExpiry $True
+
+$user = "internal\administrator"
+$pass = convertto-securestring -string password -asplaintext -force
+$credential = New-Object System.Management.Automation.PSCredential($user,$pass)
+
+Set-DhcpServerDnsCredential -Credential $Credential -ComputerName production-dc.internal.$($domain).red
+Add-DhcpServerv4Scope -name internal -StartRange 10.$($ip).1.100 -EndRange 10.$($ip).1.240 -SubnetMask 255.255.255.0 -State Active -LeaseDuration 00:10:00
+Set-DHCPServerv4OptionValue -ComputerName production-dc -DnsServer 10.$($ip).1.12 -DnsDomain internal.$($domain).red -Router 10.$($ip).1.1 
+
+#add DHCP entry
+add-dhcpserverv4reservation -scopeId 10.$($ip).1.0 -ipaddress "10.$($ip).1.1" -clientid "00-50-56-a2-13-6c" -description "reservation for the primary gatway" -name gateway.internal.$($domain).red
+
+#installing RSAT
+Install-WindowsFeature -IncludeAllSubFeature RSAT
+
