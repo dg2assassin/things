@@ -13,7 +13,7 @@ enable windows defender
 	Install-WindowsFeature -Name Windows-Defender
 	Install-WindowsFeature -Name Windows-Defender-GUI
 look at scheduled tasks
-	ps: Install-WindowsFeature -Name Windows-Defender-GUI
+	ps: get-scheduledtasks
 look for SSH keys
 	hidden flie
 look through computer groups
