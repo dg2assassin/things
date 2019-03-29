@@ -64,6 +64,18 @@ http://www.pciqsatalk.com/2016/03/disable-lmnr-netbios.html
 #smb signing
 https://blogs.technet.microsoft.com/josebda/2010/12/01/the-basics-of-smb-signing-covering-both-smb1-and-smb2/
 
+#disable wdigest
+https://p16.praetorian.com/blog/mitigating-mimikatz-wdigest-cleartext-credential-theft
+
+
+
+#list all local users
+$adsi = [ADSI]"WinNT://$env:COMPUTERNAME"
+$adsi.Children | where {$_.SchemaClassName -eq 'user'} | Foreach-Object {
+    $groups = $_.Groups() | Foreach-Object {$_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null)}
+    $_ | Select-Object @{n='UserName';e={$_.Name}},@{n='Groups';e={$groups -join ';'}}
+}
+
 
 
 
