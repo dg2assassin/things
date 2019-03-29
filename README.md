@@ -55,6 +55,16 @@ Administrative Templates → Windows Components → Windows PowerShell
 https://www.fireeye.com/blog/threat-research/2016/02/greater_visibilityt.html
 
 
+disable llmnr with gpo
+http://woshub.com/how-to-disable-netbios-over-tcpip-and-llmnr-using-gpo/
+
+with interface
+http://www.pciqsatalk.com/2016/03/disable-lmnr-netbios.html
+
+#smb signing
+https://blogs.technet.microsoft.com/josebda/2010/12/01/the-basics-of-smb-signing-covering-both-smb1-and-smb2/
+
+
 
 
 
