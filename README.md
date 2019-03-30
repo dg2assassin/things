@@ -76,7 +76,12 @@ $adsi.Children | where {$_.SchemaClassName -eq 'user'} | Foreach-Object {
     $_ | Select-Object @{n='UserName';e={$_.Name}},@{n='Groups';e={$groups -join ';'}}
 }
 
+#accessibility options
+https://attack.mitre.org/techniques/T1015/
 
+
+https://github.com/n00py/NorkNork
+https://www.n00py.io/2017/01/removing-backdoors-powershell-empire-edition/
 
 
 
